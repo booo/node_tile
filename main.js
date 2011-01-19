@@ -58,6 +58,12 @@ function render(task, callback) {
 					//TODO do async
 					hdb.put(task.url, JSON.stringify(temp));
 					//hdb.put(url, data.toString('base64'));
+
+					hdb.putAsync(task.url, JSON.stringify(temp), function(err) {
+						if(err) {
+							console.log(err);
+						}	
+					});		
 				}
 				else {
 					task.res.writeHead(404, {'Content-Type': 'text/plain'});
