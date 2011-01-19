@@ -3,7 +3,7 @@ var TC = require('./node-tokyocabinet/build/default/tokyocabinet');
 
 var path = require('path');
 var clutch = require('clutch');
-var hasher = require('crypto').createHash('md5');
+//var hasher = require('crypto').createHash('md5');
 
 var async = require('async');
 
@@ -21,7 +21,16 @@ var hdb = new HDB;
     sys.error(hdb.errmsg());
   }
   
-  
+function writeResponse(content, res) {
+	res.writeHead(200, {
+                        'Content-Type': 'image/png',
+                        'ETag' : content.ETag,
+                        //'Cache-Control' : 'max-age=3600',
+                        'Expires:' : content.Expires,
+                        });
+	res.end(new Buffer(content.data,'base64'));
+
+}
  
   
 function render(task, callback) {
@@ -34,26 +43,19 @@ function render(task, callback) {
 			
 				if(data) {
 					//TODO clean up tags, different values for different tiles	
-					//var hash = hasher.update(data).digest('hex');
-					var hash = 'dfasdf';
-					task.res.writeHead(200, {
-						'Content-Type': 'image/png',
-						'ETag' : hash,
-						'Cache-Control' : 'max-age=3600',
-						//TODO fix date representation
-						'Expires:' : new Date(new Date().getTime()+3600000),					
-						});
 						
-					task.res.end(data);
 					
 					var temp = 	{
-						'data' 		:	data.toString('base64'),
-						'timestamp'	:	new Date().getTime(),
-						'ETag'		: 	hash,
+						'data' 			:	data.toString('base64'),
+						'timestamp'		:	new Date().getTime(),
+						'ETag'			: 	require('crypto').createHash('md5').update(data).digest('hex'),
+						'Expires' 		:	new Date(new Date().getTime()+3600000).toGMTString(),
 					};
 					
-					console.log(temp.timestamp);
-					console.log(temp.ETag);
+					writeResponse(temp,task.res)	
+					//console.log(temp.timestamp);
+					//console.log(temp.ETag);
+					//TODO do async
 					hdb.put(task.url, JSON.stringify(temp));
 					//hdb.put(url, data.toString('base64'));
 				}
@@ -113,6 +115,6 @@ var myRoutes = clutch.route404([
 
 
 var http = require('http');
-http.createServer(myRoutes).listen(8080, 'localhost');
+http.createServer(myRoutes).listen(8000, 'localhost');
 
 
