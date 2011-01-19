@@ -76,12 +76,6 @@ function render(task, callback) {
 	
 } 
 
-function render2(worker) {
-	//console.log(worker);
-	worker.finish();
-}
-  
-
 function requestHandler(req, res, style, z, x, y) {
 	//console.log(style, z, x, y);
 	var url = style + "/" + z + "/" + x + "/" + y;
@@ -104,9 +98,26 @@ function requestHandler(req, res, style, z, x, y) {
 		}
 		else {
 			//console.log(value);
-			res.writeHead(200, {'Content-Type': 'image/png'});
-			res.end(new Buffer( JSON.parse(value).data,'base64')); }
-
+			var content = JSON.parse(value);
+			//TODO changeable expire time... 1000*60*60*24 = one day
+			if((new Date().getTime() - content.timestamp) > 1000*30) {
+				//rerender
+				var renderTask = {
+                'url' : url,
+                'res' : res,
+                'stylesheet' : style,
+                'z' : z,
+                'x' : x,
+                'y' : y
+                };
+				//response is send in render function
+				queue.push(renderTask, function() {});
+			} 
+			else {
+				//tile is not expired
+				writeResponse(content, res);
+			}
+		}
 	});
 
 	
@@ -115,6 +126,11 @@ function requestHandler(req, res, style, z, x, y) {
 
 var myRoutes = clutch.route404([
 				['GET /(\\w+)/(\\d+)/(\\d+)/(\\d+).png$', requestHandler],
+				/*['HEAD /(\\w+)/(\\d+)/(\\d+)/(\\d+).png$', requestHandler],
+				['GET /(\\w+)/(\\d+)/(\\d+)/(\\d+).png/dirty$', requestHandler],
+				['HEAD /(\\w+)/(\\d+)/(\\d+)/(\\d+).png/dirty$', requestHandler],
+				['GET /(\\w+)/(\\d+)/(\\d+)/(\\d+).png/status$', requestHandler],
+				['HEAD /(\\w+)/(\\d+)/(\\d+)/(\\d+).png/status$', requestHandler],*/
 				]);
 
 
