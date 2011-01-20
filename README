@@ -1,0 +1,27 @@
+====================
+osm@spline node_tile
+====================
+
+Simple tile server with integrated cache using tokyo cabinet and mapnik.
+
+Dependencies
+====================
+
+* libmapnik (trunk)
+* tokyo cabinet
+* node-mapnik (https://github.com/mapnik/node-mapnik)
+* clutch (https://github.com/clement/clutch)
+* node-tokyocabinet (https://github.com/edvakf/node-tokyocabinet)
+
+Basic setup
+====================
+
+Install latest stable nodejs and npm version. Compile mapnik trunk from source.
+Install tokyo cabinet. Install node-mapnik and node-tokyocabinet following the
+instructions in the READMEs. Use "npm link" to install mapnik source. Does not
+work on node-tokyo? :(
+
+Mapnik styles
+====================
+
+Use the configuration file to add your styles.
