@@ -1,3 +1,4 @@
+var config = require('./config');	//include config file
 var mapnik = require('mapnik');
 var TC = require('./node-tokyocabinet/build/default/tokyocabinet');
 
