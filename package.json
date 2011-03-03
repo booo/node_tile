@@ -1,0 +1,12 @@
+{ 
+    name            :   "node_tile",
+    version         :   "0.0.23",
+    description     :   "simple tile server with integrated cache",
+    autor           :   "booo",
+    files           :   ["."],
+    dependencies    :   {
+                            clutch                  :   "*",
+                            mapnik                  :   "*",
+                            //"node-tokyocabinet"     :   "*"
+                        }
+}
