@@ -43,7 +43,7 @@ var acquire = function(id,options,callback) {
             obj.clear();
             delete obj;
        },
-       idleTimeoutMillis: 20000,
+       idleTimeoutMillis: options.idleTimeoutMillis || 20000,
     }
     maps.acquire(id, methods, function(obj) {
         callback(null, obj);
@@ -52,7 +52,7 @@ var acquire = function(id,options,callback) {
  
 function render(task, callback) {
 	
-    acquire(task.style.file,{}, function(err, map) {
+    acquire(task.style.file,{idleTimeoutMillis : task.style.idleTimeoutMillis}, function(err, map) {
         if(err) {
             console.log(err);
         }
