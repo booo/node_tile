@@ -53,7 +53,7 @@ var acquire = function(id,options,callback) {
 }
  
 function render(task, callback) {
-	
+
     acquire(task.style.file,{idleTimeoutMillis : task.style.idleTimeoutMillis}, function(err, map) {
         if(err) {
             //call callback
@@ -62,21 +62,21 @@ function render(task, callback) {
         else {
             var bbox = mercator.xyz_to_envelope(task.x, task.y, task.z, false)
             map.render(bbox,"png",function(error,data) {
-		        //console.log(data)
+                //console.log(data)
                 console.log("tile rendered");
-				if(!error) {
-					//TODO clean up tags, different values for different tiles	
-					var temp = 	{
-						'data' 			:	data.toString('base64'),
-                        'timestamp'		:	new Date().getTime(),
-                        'ETag'			: 	require('crypto').createHash('md5').update(data).digest('hex'),
-                        'Expires' 		:	new Date(new Date().getTime()+task.style.expire).toGMTString(),
+                if(!error) {
+                    //TODO clean up tags, different values for different tiles	
+                    var temp = 	{
+                        'data'          :   data.toString('base64'),
+                        'timestamp'     :   new Date().getTime(),
+                        'ETag'          :   require('crypto').createHash('md5').update(data).digest('hex'),
+                        'Expires'       :   new Date(new Date().getTime()+task.style.expire).toGMTString(),
                     };
                     //call callback instead
                     writeResponse(temp,task.res)
                     hdb.putAsync(task.url, JSON.stringify(temp), function(err) {
                         if(err) {
-					        console.log(err);
+                            console.log(err);
                         } else {
                             console.log("tile saved")
                         }
@@ -104,41 +104,40 @@ function requestHandler(req, res, style, z, x, y) {
         && y >= 0 && y < Math.pow(2,z)) {
 
         hdb.getAsync(url, function(err, value) {
-		    if(err) {
-			    var renderTask = {
-				    'url' : url,
-				    'res' : res,
-				    'style' : config.styles[style],
-				    'z' : parseInt(z),
-				    'x' : parseInt(x),
-				    'y' : parseInt(y)
-				    };
+            if(err) {
+                var renderTask = {
+                    'url'   :   url,
+                    'res'   :   res,
+                    'style' :   config.styles[style],
+                    'z'     :   parseInt(z),
+                    'x'     :   parseInt(x),
+                    'y'     :   parseInt(y)
+                };
                 render(renderTask,function() {});
 		    }
-		    else {
-			    var content = JSON.parse(value);
-			    //TODO changeable expire time... 1000*60*60*24 = one day
-			    if((new Date().getTime() - content.timestamp) > config.styles[style].expire) {
-				    //rerender
-				    var renderTask = {
-                    'url' : url,
-                    'res' : res,
-                    'style' : config.styles[style],
-                    'z' : parseInt(z),
-                    'x' : parseInt(x),
-                    'y' : parseInt(y)
+            else {
+                var content = JSON.parse(value);
+                //TODO changeable expire time... 1000*60*60*24 = one day
+                if((new Date().getTime() - content.timestamp) > config.styles[style].expire) {
+                    //rerender
+                    var renderTask = {
+                        'url'   :   url,
+                        'res'   :   res,
+                        'style' :   config.styles[style],
+                        'z'     :   parseInt(z),
+                        'x'     :   parseInt(x),
+                        'y'     :   parseInt(y)
                     };
-				    //response is send in render function
+                    //response is send in render function
                     render(renderTask,function() {});
-			    } 
-			    else {
-				    //tile is not expired
-				    writeResponse(content, res);
-			    }
-		    }
-	    });
+                } else {
+                    //tile is not expired
+                    writeResponse(content, res);
+                }
+            }
+        });
 
-	} else {
+    } else {
         console.log("bad request")
         res.writeHead(404,{})
         res.end()
