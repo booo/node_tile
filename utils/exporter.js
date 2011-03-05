@@ -20,7 +20,7 @@ var iter = function(key,cb) {
     }
     var tmp = key.split('/')
     tmp.pop()
-    console.log(tmp)
+    //console.log(tmp)
     var dirstr = __dirname + '/' + tmp.join('/')
     path.exists(dirstr,function(exists) {
         if(!exists) {
@@ -29,7 +29,7 @@ var iter = function(key,cb) {
                     console.error(err)
                 }
                 //create file
-                fs.writeFile(__dirname + '/' + key + '.png', 'bla', function(err) {
+                fs.writeFile(__dirname + '/' + key + '.png', new Buffer(JSON.parse(hdb.get(key)).data, 'base64'), function(err) {
                     if(err) {
                         console.log(err)
                     }
@@ -38,7 +38,10 @@ var iter = function(key,cb) {
                 iter(hdb.iternext(), cb)
             })
         } else {
-            fs.writeFile(__dirname + '/' + key + '.png', 'bla', function(err) {
+            fs.writeFile(__dirname + '/' + key + '.png', new Buffer(JSON.parse(hdb.get(key)).data, 'base64'), function(err) {
+                if(err) {
+                    console.log(err)
+                }
             })
             iter(hdb.iternext(), cb)
             //dir exists
