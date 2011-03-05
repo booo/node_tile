@@ -14,6 +14,8 @@ console.log("Tokyo Cabinet version " + TC.VERSION);
 var HDB = TC.HDB;
 var hdb = new HDB;
 
+if (!hdb.setmutex()) throw hdb.errmsg();
+
 if (!hdb.open(config.cacheFile, HDB.OWRITER | HDB.OCREAT)) {
     sys.error(hdb.errmsg());
 }
@@ -54,6 +56,7 @@ function render(task, callback) {
 	
     acquire(task.style.file,{idleTimeoutMillis : task.style.idleTimeoutMillis}, function(err, map) {
         if(err) {
+            //call callback
             console.log(err);
         }
         else {
@@ -65,29 +68,31 @@ function render(task, callback) {
 					//TODO clean up tags, different values for different tiles	
 					var temp = 	{
 						'data' 			:	data.toString('base64'),
-						'timestamp'		:	new Date().getTime(),
-						'ETag'			: 	require('crypto').createHash('md5').update(data).digest('hex'),
-						'Expires' 		:	new Date(new Date().getTime()+task.style.expire).toGMTString(),
-					};
-					writeResponse(temp,task.res)	
-					hdb.putAsync(task.url, JSON.stringify(temp), function(err) {
-						if(err) {
-							console.log(err);
-						}
-                        else {
+                        'timestamp'		:	new Date().getTime(),
+                        'ETag'			: 	require('crypto').createHash('md5').update(data).digest('hex'),
+                        'Expires' 		:	new Date(new Date().getTime()+task.style.expire).toGMTString(),
+                    };
+                    //call callback instead
+                    writeResponse(temp,task.res)
+                    hdb.putAsync(task.url, JSON.stringify(temp), function(err) {
+                        if(err) {
+					        console.log(err);
+                        } else {
                             console.log("tile saved")
                         }
-					});		
-				}
-				else {
+                    });
+                }
+                else {
+                    //call callback instead with error
                     console.log(error.message)
-					task.res.writeHead(404, {'Content-Type': 'text/plain'});
-					task.res.end();
-				}
-				callback();
-			});
+                    task.res.writeHead(404, {'Content-Type': 'text/plain'});
+                    task.res.end();
+                }
+                //remove unnecessary callback
+                callback();
+            });
         }	
-	});
+    });
 } 
 
 function requestHandler(req, res, style, z, x, y) {
